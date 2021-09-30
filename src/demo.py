@@ -10,14 +10,16 @@ import visualization.scatter_plot as scatter
 import visualization.box_plot as box
 import features.standardize as stan
 
-md = d.myData()
-X = md.X
-M = md.M
-attr = md.attributeNames
+# md = d.myData()
+# X = md.X
+# M = md.M
+# attr = md.attributeNames
 
-X_stand = stan.standardize(X, md.N)
+# X_stand = stan.standardize(X, md.N)
 
-# scatter.makeplot(X, M , attr)
-scatter.makeplot(X_stand, M , attr)
+# # scatter.makeplot(X, M , attr)
+# scatter.makeplot(X_stand, M , attr)
 
-box.makeplot(X_stand, attr)
+# box.makeplot(X_stand, attr)
+
+k = list(range(1,11))
