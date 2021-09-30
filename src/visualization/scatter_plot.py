@@ -28,3 +28,24 @@ def makeplot(X,M,attributeNames):
             else:
                 yticks([])
     show()
+    
+import sys
+import os
+dirname = os.path.dirname(__file__)
+
+foldername = os.path.join(dirname, '../data')
+sys.path.append(foldername)
+import myData as d
+
+foldername = os.path.join(dirname, '../features')
+sys.path.append(foldername)
+import standardize as stan
+
+md = d.myData()
+X = md.X
+M = md.M
+attr = md.attributeNames
+
+X_stand = stan.standardize(X, md.N)
+
+makeplot(X_stand, M, attr)
