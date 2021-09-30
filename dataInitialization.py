@@ -61,15 +61,5 @@ fig1, ax1 = plt.subplots()
 ax1.set_title('Box plot of the 10 attributes')
 ax1.boxplot(Xstand,labels=attributeNames[1:11],vert=False)
 
-# # Next, we plot histograms of all attributes.
-# plt.figure(figsize=(14,9))
-# u = np.floor(np.sqrt(M)); v = np.ceil(float(M)/u)
-# for i in range(M-1):
-#     plt.subplot(u,v,i+1)
-#     plt.hist(Xstand[:,i+1])
-#     plt.xlabel(attributeNames[i+1])
-#     plt.ylim(0, N) # Make the y-axes equal for improved readability
-#     if i%v!=0: plt.yticks([])
-#     if i==0: plt.title('African heart disease: Histogram')
 
 
