@@ -11,7 +11,7 @@ from scipy import stats
 def makeHistograms(Xstand,noAttributes):
     N,M=np.shape(Xstand)
     # Next, we plot histograms of all attributes.
-    plt.figure(figsize=(14,10))
+    plt.figure(figsize=(10,6))
     u = np.floor(np.sqrt(M)); v = np.ceil(float(M)/u)
     for i in range(M):
         #Selecting location in figure:

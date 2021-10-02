@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def makeplot(V, M, n, attributeNames):
+    plt.figure(figsize=(8,4))
     pcs = list(range(0,n))
     legendStrs = ['PC'+str(e+1) for e in pcs]
     # c = ['r','g','b']
@@ -16,7 +17,7 @@ def makeplot(V, M, n, attributeNames):
     r = np.arange(1,M+1)
     for i in pcs:    
         plt.bar(r+i*bw, V[:,i], width=bw)
-        plt.xticks(r+bw, attributeNames)
+        plt.xticks(r+bw, attributeNames, rotation='vertical')
         plt.xlabel('Attributes')
         plt.ylabel('Component coefficients')
         plt.legend(legendStrs, bbox_to_anchor=(1.05, 1.0), loc='best')

@@ -15,6 +15,8 @@ import myData as d
 
 import standardize as stan
 
+import numberedAttributes as nu
+
 from scipy.linalg import svd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,9 +58,14 @@ for e in range(0,7):
 
 scatter.makeplot(Z, 7, pc)
 
+noAttr=nu.addNumbers(attributeNames)
+
 # We saw that the first 8 components in V explaiend more than 90
 # percent of the variance. Let's look at their coefficients:
 import pca_coefficients as pca_c
 
-pca_c.makeplot(V, M, 8, list(range(1,11)))
+pca_c.makeplot(V, M, 8,noAttr)
+
+import pca_3dplot as pca_3d
+pca_3d.plot3d(Z,noAttr)
     
