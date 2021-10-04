@@ -26,4 +26,4 @@ box.makeplot(X_stand, attr)
 
 noAttr=no.addNumbers(attr)
 
-hist.makeHistogram(X_stand,noAttr)
+hist.makeHistograms(X_stand,noAttr)

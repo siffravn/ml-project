@@ -53,10 +53,10 @@ ve.makeplot(rho, 0.9)
 import scatter_plot as scatter
 
 pc = list()
-for e in range(0,7):
+for e in range(0,8):
     pc.append('PC{0}'.format(e+1))
 
-scatter.makeplot(Z, 7, pc)
+scatter.makeplot(Z, 8, pc)
 
 noAttr=nu.addNumbers(attributeNames)
 

@@ -46,6 +46,11 @@ X = md.X
 M = md.M
 attr = md.attributeNames
 
-X_stand = stan.standardize(X, md.N)
+X2 = np.delete(X,4,1)
+X3 = np.delete(X2,8,1)
+attr = np.delete(attr, 4)
+attr = np.delete(attr, 8)
 
-makeplot(X_stand, M, attr)
+X_stand = stan.standardize(X3, md.N)
+
+makeplot(X_stand, len(attr), attr)
