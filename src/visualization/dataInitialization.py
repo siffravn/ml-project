@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 24 22:44:00 2021
-
-@author: Siff
-"""
+# exercise 1.5.1
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
+
 def makeHistograms(Xstand,noAttributes):
-    N,M=np.shape(Xstand)
     # Next, we plot histograms of all attributes.
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(14,10))
     u = np.floor(np.sqrt(M)); v = np.ceil(float(M)/u)
     for i in range(M):
         #Selecting location in figure:
@@ -39,4 +35,5 @@ def makeHistograms(Xstand,noAttributes):
             
     plt.suptitle('African heart disease: Histogram of  standardized data', y=1.05, size=16)
     plt.tight_layout();
+
 
