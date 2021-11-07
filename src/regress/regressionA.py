@@ -1,5 +1,5 @@
 # exercise 8.1.1
-import sys
+import sys 
 import os
 dirname = os.path.dirname(__file__)
 
@@ -13,41 +13,52 @@ from toolbox_02450 import rlr_validate
 
 foldername = os.path.join(dirname, '../data')
 sys.path.append(foldername)
-import data.myData as d
+import myData as d
 
 foldername = os.path.join(dirname, '../features')
 sys.path.append(foldername)
-import features.standardize as stan
-import features.numberedAttributes as no
+import standardize as stan
+import numberedAttributes as no
 
 md = d.myData()
 X = md.X
 attr = md.attributeNames
 
-X_stand = stan.standardize(X, md.N)
+X=np.array(X,dtype=np.float64)
+X = stan.standardize(X, md.N)
+X=np.array(X,dtype=np.float64)
+#X_stand = stan.standardize(X, md.N)
+#X_stand=np.array(X_stand,dtype=np.float64)
 
 noAttr=no.addNumbers(attr)
 
 #Definerer age kolonnen som egen array, vi vil forudse og 
 #fjerner age kolonnen fra dataen:
-y=X_stand[:,8]
-X_del=np.delete(X_stand,8,axis=1)
+#y=X_stand[:,8]
+#X_del=np.delete(X_stand,8,axis=1)
+
+y=X[:,8]
+X_del=np.delete(X,8,axis=1)
 
 N, M = X_del.shape
 
 # Add offset attribute
 X_del = np.concatenate((np.ones((X_del.shape[0],1)),X_del),1)
-attributeNames = [u'Offset']+noAttr
+attributeNames = np.hstack((np.array([u'Offset']),np.delete(noAttr,8)))
 M = M+1
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
-K = 5
+K = 10
 CV = model_selection.KFold(K, shuffle=True)
 #CV = model_selection.KFold(K, shuffle=False)
 
 # Values of lambda
-lambdas = np.power(10.,range(-5,9))
+lambdas=np.zeros(10)
+for i in range(10):
+    power=-1.2+0.3*(i+1)
+    lambdas[i]=np.power(10.,power)
+#lambdas = np.power(10.,range(-2,6))
 
 # Initialize variables
 #T = len(lambdas)
@@ -63,17 +74,19 @@ sigma = np.empty((K, M-1))
 w_noreg = np.empty((M,K))
 
 k=0
+opt_lambdas=np.zeros(K)
 for train_index, test_index in CV.split(X_del,y):
     
     # extract training and test set for current CV fold
-    X_train = X[train_index]
+    X_train = X_del[train_index]
     y_train = y[train_index]
-    X_test = X[test_index]
+    X_test = X_del[test_index]
     y_test = y[test_index]
-    internal_cross_validation = 10    
+    internal_cross_validation = 2 
     
     opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_train, y_train, lambdas, internal_cross_validation)
 
+    opt_lambdas[k]=opt_lambda
     # Standardize outer fold based on training set, and save the mean and standard
     # deviations since they're part of the model (they would be needed for
     # making new predictions) - for brevity we won't always store these in the scripts
@@ -110,7 +123,7 @@ for train_index, test_index in CV.split(X_del,y):
 
     # Display the results for the last cross-validation fold
     if k == K-1:
-        figure(k, figsize=(12,8))
+        figure(k, figsize=(14,6))
         subplot(1,2,1)
         semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-') # Don't plot the bias term
         xlabel('Regularization factor')
@@ -135,7 +148,8 @@ for train_index, test_index in CV.split(X_del,y):
 
     k+=1
 
-show()
+show() 
+    
 # Display results
 print('Linear regression without feature selection:')
 print('- Training error: {0}'.format(Error_train.mean()))
