@@ -20,9 +20,7 @@ attributeNames = md.attributeNames[M-1]
 classNames = ['class 1', 'class 2']
 
 X = md.X[:,0:M-1].astype(float)
-y = md.X[:,M-1].astype(np.uint8)
-
-y = np.expand_dims(y, axis=1)
+y = md.X[:,M-1].astype(float)
 
 N, M = X.shape
 
@@ -32,10 +30,15 @@ N, M = X.shape
 # hidden_units = [1,2,3,4,5,6,7,8,9,10]
 K1 = 2
 K2 = 2
-hidden_units = [1,2,3]
 
+# Define values for ANN
+hidden_units = [1,2,3]
 val_errors = np.zeros(shape=(K1, K2, len(hidden_units)))
+gen_errors = [None] * len(hidden_units)
+
+# Define table
 test_errors = np.zeros(shape=(K1, 2))
+
 
 CV = model_selection.KFold(K1,shuffle=True)
 
@@ -47,7 +50,7 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     X_test1 = X[test_index1,:]
     y_test1 = y[test_index1]
     
-    test_index2 = 0;
+    # test_index2 = 0;
     
     CV = model_selection.KFold(K2,shuffle=True)
     
@@ -77,13 +80,10 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             
             # Save error_rate
             val_errors[i][j][hidden_units.index(h)] = val_error_rate # store error rate for current CV fold
-    
+        
     
     # Compute model generalization error for each model s
     print('Compute gen_error')
-    
-    # gen_errors = np.zeros(shape=(len(hidden_units)))
-    gen_errors = [None] * len(hidden_units)
     
     for index in range(len(hidden_units)):
         h = hidden_units[index]
@@ -98,12 +98,8 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
         
         
     # Find and select optimal model 
-    # min_gen_error = min(gen_errors)
-    # index = np.where(gen_errors == min_gen_error)
-    
     index = gen_errors.index(min(gen_errors))
     optimal_hidden_units = hidden_units[index]
-    
     
     # Train and test optimal model #
     model = ann.define(M, optimal_hidden_units)

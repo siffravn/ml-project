@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import torch
 from toolbox_02450 import train_neural_net
 
@@ -30,6 +31,9 @@ def define(M, hidden_units):
     
 def train(model, X_train, y_train):
     
+    # Format y so tourch can use it
+    y_train = np.expand_dims(y_train, axis=1).astype(np.uint8)
+    
     # Convert training set to PyTorch tensors
     X_train = torch.Tensor(X_train)
     y_train = torch.Tensor(y_train)
@@ -57,6 +61,9 @@ def train(model, X_train, y_train):
 
 
 def test(net, X_test, y_test):
+    
+    # Format y so tourch can use it
+    y_test = np.expand_dims(y_test, axis=1).astype(np.uint8)
     
     # Convert test set to PyTorch tensors
     X_test = torch.Tensor(X_test)
