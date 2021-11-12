@@ -10,7 +10,7 @@ def define_train_test(hidden_units, M, X_train, y_train, X_test, y_test):
     net, final_loss, learning_curve = train(model, X_train, y_train)
     error_rate = test(net, X_test, y_test)
     
-    return net, error_rate
+    return error_rate
     
     
     
