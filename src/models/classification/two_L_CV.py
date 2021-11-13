@@ -2,9 +2,11 @@
 
 import numpy as np
 from sklearn import model_selection
+from collections import Counter
 
 import log_reg
 import ann
+import baseline
 import tl_cv_util
 
 import sys
@@ -26,24 +28,22 @@ y = md.X[:,M-1].astype(float)
 
 N, M = X.shape
 
-
-# K1 = 5
-# K2 = 5
-# hidden_units = [1,2,3,4,5,6,7,8,9,10]
-K1 = 2
-K2 = 2
+K1 = 10
+K2 = 10
 
 # Define values for log_reg
-lambdas = np.logspace(-2, 2, 3).tolist()
+lambdas = np.logspace(-2, 2, 50).tolist()
 lr_val_errors = np.zeros(shape=(K1, K2, len(lambdas)))
 
 # Define values for ANN
-hidden_units = range(1,3,1)
+hidden_units = range(1,10,1)
 ann_val_errors = np.zeros(shape=(K1, K2, len(hidden_units)))
 
 # Define table
-test_errors = np.zeros(shape=(K1, 4))
+table = np.zeros(shape=(K1, 5))
 
+train_indexs = []
+test_indexs = []
 
 CV = model_selection.KFold(K1,shuffle=True)
 
@@ -74,10 +74,15 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             
             # Define the model structure #
             # Train model #
-            # Test model #
+            # Test model #            
+            y_test_est2 = log_reg.define_train_test(l,
+                                                    X_train2, 
+                                                    y_train2, 
+                                                    X_test2, 
+                                                    y_test2)
+            
             # store error rate for current CV fold
-            lr_val_errors[i][j][lambdas.index(l)] = log_reg.define_train_test(l, X_train2, y_train2, X_test2, y_test2)
-        
+            lr_val_errors[i][j][lambdas.index(l)] = log_reg.error_rate(y_test_est2, y_test2)
         
         # Artificial neural net
         for h in hidden_units :
@@ -87,17 +92,16 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             print('Model hidden units = ', h)
             
             # Define the model structure #
-            model = ann.define(M, h)
-            
             # Train model #
-            net, final_loss, learning_curve = ann.train(model, X_train2, y_train2)
-            
-            # Test model #
-            val_error_rate = ann.test(net, X_test2, y_test2)
+            # Test model #   
+            y_test_est2 = ann.define_train_test(h, 
+                                                M, 
+                                                X_train2, 
+                                                y_train2, 
+                                                X_test2)
             
             # Store error rate for current CV fold
-            ann_val_errors[i][j][hidden_units.index(h)] = val_error_rate
-    
+            ann_val_errors[i][j][hidden_units.index(h)] = ann.error_rate(y_test_est2, y_test2)
     
     
     weight = len(test_index2)/len(train_index1)
@@ -105,38 +109,76 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     # Log-reg ##
     # Find_optimal_model
     optimal_lambda = tl_cv_util.find_optimal_model(lambdas, 
-                                                  lr_val_errors[i,:,:], 
-                                                  weight
-                                                  )
+                                                   lr_val_errors[i,:,:], 
+                                                   weight)
     
-    # Re-train and test optimal model
-    test_error_rate = log_reg.define_train_test(optimal_lambda, X_train1, y_train1, X_test1, y_test1)
+    # Re-train and test optimal model    
+    y_test_est1 = log_reg.define_train_test(optimal_lambda,
+                                            X_train1, 
+                                            y_train1, 
+                                            X_test1, 
+                                            y_test1)
+    
+    test_error_rate = log_reg.error_rate(y_test_est1, y_test1)
 
     
     # Save error_rate and lambda
-    test_errors[i,0] = optimal_lambda
-    test_errors[i,1] = test_error_rate
+    table[i,0] = np.round(np.log10(optimal_lambda),2)
+    table[i,1] = test_error_rate
     
     
     
     # ANN ##
     # Compute model generalization error for each model s
     optimal_hidden_units = tl_cv_util.find_optimal_model(hidden_units, 
-                                                          ann_val_errors[i,:,:], 
-                                                          weight
-                                                          )
+                                                         ann_val_errors[i,:,:], 
+                                                         weight)
     
     # Re-train and test optimal model
-    test_error_rate = ann.define_train_test(optimal_hidden_units, M, X_train1, y_train1, X_test1, y_test1)
+    y_test_est1 = ann.define_train_test(optimal_hidden_units,
+                                        M, 
+                                        X_train1, 
+                                        y_train1, 
+                                        X_test1)
+    
+    test_error_rate = ann.error_rate(y_test_est1, y_test1)
     
     # Save error_rate and hidden_unit
-    test_errors[i,2] = optimal_hidden_units
-    test_errors[i,3] = test_error_rate
+    table[i,2] = optimal_hidden_units
+    table[i,3] = test_error_rate
+    
+    
+    # Baseline ##
+    # Re-train and test baseline
+    y_test_est1 = baseline.define_train_test(y_train1, X_test1)
+    
+    # Save error_rate
+    table[i][4] = baseline.error_rate(y_test_est1, y_test1)
+    
+    ## Preperation for performance testing
+    train_indexs.append(train_index1)
+    test_indexs.append(test_index1)
     
     
 # Compute the estimate of the generalization error
-est_gen_error = sum((len(test_index1)/N)*test_errors[:,1])
-print('Log_reg: Estimated generalization error is', est_gen_error)
 
-est_gen_error = sum((len(test_index1)/N)*test_errors[:,3])
-print('Ann:     Estimated generalization error is', est_gen_error)
+weight = len(test_index1)/N
+
+est_gen_error = sum(weight*table[:,1])
+print('Log_reg:  Estimated generalization error is', est_gen_error)
+
+est_gen_error = sum(weight*table[:,3])
+print('Ann:      Estimated generalization error is', est_gen_error)
+
+est_gen_error = sum(weight*table[:,4])
+print('Baseline: Estimated generalization error is', est_gen_error)
+
+
+## Preperation for performance testing
+counter = Counter(table[:,0])
+opt_lambda = counter.most_common(1)[0][0]
+print('most common: ', opt_lambda)
+
+counter = Counter(table[:,2])
+opt_hidden_unit = counter.most_common(1)[0][0]
+print('most common: ', opt_hidden_unit)

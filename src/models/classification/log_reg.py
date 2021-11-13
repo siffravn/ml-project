@@ -12,10 +12,9 @@ def define_train_test(lambda_val, X_train, y_train, X_test, y_test):
     # Define, train and test model
     model = define(lambda_val)
     model = train(model, X_train, y_train, mu, sigma)
-    error_rate = test(model, X_test, y_test, mu, sigma)
+    y_test_est = test(model, X_test, y_test, mu, sigma)
     
-    return error_rate
-
+    return y_test_est
 
 def define(lambda_val):
     
@@ -41,6 +40,13 @@ def test(model, X_test, y_test, mu, sigma):
     X_test = (X_test - mu) / sigma
     
     y_test_est = model.predict(X_test).T 
+    error_rate = np.sum(y_test_est != y_test) / len(y_test)
+    
+    return y_test_est
+    
+
+def error_rate(y_test_est, y_test):
+    
     error_rate = np.sum(y_test_est != y_test) / len(y_test)
     
     return error_rate
