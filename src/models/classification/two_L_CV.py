@@ -27,6 +27,9 @@ classNames = ['class 1', 'class 2']
 X = md.X[:,0:M-1].astype(float)
 y = md.X[:,M-1].astype(float)
 
+X_tensor = torch.Tensor(X)
+y_tensor = torch.Tensor(np.expand_dims(y, axis=1).astype(np.uint8))
+
 N, M = X.shape
 
 K1 = 10
@@ -45,6 +48,9 @@ table = np.zeros(shape=(K1, 5))
 
 train_indexs = []
 test_indexs = []
+
+yhat = []
+y_true = []
 
 CV = model_selection.KFold(K1,shuffle=True)
 
@@ -84,12 +90,7 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             
             # store error rate for current CV fold
             lr_val_errors[i][j][lambdas.index(l)] = log_reg.error_rate(y_test_est2, y_test2)
-        
-        
-        # Artificial neural net
-        X_tensor_train2 = torch.Tensor(X_train2)
-        y_tensor_train2 = torch.Tensor(np.expand_dims(y_train2, axis=1).astype(np.uint8))
-        X_tensor_test2 = torch.Tensor(X_test2)
+
         
         for h in hidden_units :
             
@@ -102,15 +103,18 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             # Test model #   
             y_test_est2 = ann.define_train_test(h, 
                                                 M, 
-                                                X_tensor_train2, 
-                                                y_tensor_train2, 
-                                                X_tensor_test2)
+                                                X_tensor[train_index2], 
+                                                y_tensor[train_index2], 
+                                                X_tensor[test_index2])
             
             # Store error rate for current CV fold
             ann_val_errors[i][j][hidden_units.index(h)] = ann.error_rate(y_test_est2, y_test2)
     
     
     weight = len(test_index2)/len(train_index1)
+    
+    # Performance
+    dy = []
     
     # Log-reg ##
     # Find_optimal_model
@@ -126,21 +130,16 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
                                             y_test1)
     
     test_error_rate = log_reg.error_rate(y_test_est1, y_test1)
-
     
     # Save error_rate and lambda
-    # table[i,0] = np.round(np.log10(optimal_lambda),2)
     table[i,0] = np.round(np.log10(optimal_lambda),2)
     table[i,1] = test_error_rate
     
+    dy.append(y_test_est1)
     
     
-    # ANN ##
-    X_tensor_train1 = torch.Tensor(X_train1)
-    y_tensor_train1 = torch.Tensor(np.expand_dims(y_train1, axis=1).astype(np.uint8))
-    X_tensor_test1 = torch.Tensor(X_test1)
     
-    
+    # # ANN ##
     # Compute model generalization error for each model s
     optimal_hidden_units = tl_cv_util.find_optimal_model(hidden_units, 
                                                           ann_val_errors[i,:,:], 
@@ -149,15 +148,17 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     # Re-train and test optimal model
     y_test_est1 = ann.define_train_test(optimal_hidden_units,
                                         M, 
-                                        X_tensor_train1, 
-                                        y_tensor_train1, 
-                                        X_tensor_test1)
+                                        X_tensor[train_index1], 
+                                        y_tensor[train_index1], 
+                                        X_tensor[test_index1])
     
     test_error_rate = ann.error_rate(y_test_est1, y_test1)
     
     # Save error_rate and hidden_unit
     table[i,2] = optimal_hidden_units
     table[i,3] = test_error_rate
+    
+    dy.append(y_test_est1)
     
     
     # Baseline ##
@@ -167,9 +168,15 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     # Save error_rate
     table[i][4] = baseline.error_rate(y_test_est1, y_test1)
     
+    dy.append(y_test_est1)
+    
     ## Preperation for performance testing
     train_indexs.append(train_index1)
     test_indexs.append(test_index1)
+    
+    dy = np.stack(dy, axis=1)
+    yhat.append(dy)
+    y_true.append(y_test1)
     
     
 # Compute the estimate of the generalization error
