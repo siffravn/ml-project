@@ -18,7 +18,7 @@ import torch
 #import sklearn.linear_model as lm
 from sklearn import model_selection
 from toolbox_02450 import rlr_validate,train_neural_net
-#from scipy import stats
+import statSetupI as sta
 
 foldername = os.path.join(dirname, '../data')
 sys.path.append(foldername)
@@ -62,7 +62,7 @@ M = M+1
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
-K = 5
+K = 10
 CV = model_selection.KFold(K, shuffle=True)
 #CV = model_selection.KFold(K, shuffle=False)
 
@@ -90,6 +90,12 @@ LR_Error_train_rlr = np.empty((K,1))
 LR_Error_test_rlr = np.empty((K,1))
 LR_w_rlr = np.empty((M,K))
 
+# Setting font family in figures.
+rc = {"font.family" : "serif", 
+      "mathtext.fontset" : "stix"}
+rcParams.update(rc)
+rcParams["font.serif"] = ["Times New Roman"] + rcParams["font.serif"]
+
 #Setup figure for linear regression regularization factor:
 regu, regu_axes = subplots(1,2, figsize=(14,6))
 # Setup figure for display of learning curves and error rates in fold
@@ -97,17 +103,13 @@ summaries, summaries_axes = subplots(1,2, figsize=(10,5))
 # Make a list for storing assigned color of learning curve for up to K=10
 color_list = ['tab:orange', 'tab:green', 'tab:purple', 'tab:brown', 'tab:pink',
               'tab:gray', 'tab:olive', 'tab:cyan', 'tab:red', 'tab:blue']
-rc = {"font.family" : "serif", 
-      "mathtext.fontset" : "stix"}
-rcParams.update(rc)
-rcParams["font.serif"] = ["Times New Roman"] + rcParams["font.serif"]
 
 
 # Parameters for neural network classifier
 n_hidden_units = range(5,15)     # range of hidden units
 H=len(n_hidden_units) #number of different hidden units tested
 n_replicates = 1       # number of networks trained in each k-fold
-max_iter = 5000
+max_iter = 10000
 
 # Initialize empty arrays:
 ANN_Error_test = np.empty((K,1))
@@ -169,19 +171,19 @@ for train_index, test_index in CV.split(X_del,y):
     
     # Display the results for the last cross-validation fold
     if k == K-1:
-        regu.set_label('CV fold {0}'.format(k+1))
+        regu_axes.set_label('CV fold {0}'.format(k+1))
         regu_axes[0].semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-') # Don't plot the bias term
-        regu_axes[0].set_xlabel('Regularization factor')
-        regu_axes[0].set_ylabel('Mean Coefficient Values')
+        regu_axes[0].set_xlabel('Regularization factor',size=15)
+        regu_axes[0].set_ylabel('Mean Coefficient Values',size=15)
         regu_axes[0].grid()
         # You can choose to display the legend, but it's omitted for a cleaner 
         # plot, since there are many attributes
         #legend(attributeNames[1:], loc='best')
         
-        regu_axes[1].set_title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)))
+        regu_axes[1].set_title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)),size=20)
         regu_axes[1].loglog(lambdas,train_err_vs_lambda.T,'b.-',lambdas,test_err_vs_lambda.T,'r.-')
-        regu_axes[1].set_xlabel('Regularization factor')
-        regu_axes[1].set_ylabel('Squared error (crossvalidation)')
+        regu_axes[1].set_xlabel('Regularization factor',size=15)
+        regu_axes[1].set_ylabel('Squared error (crossvalidation)',size=15)
         regu_axes[1].legend(['Train error','Validation error'])
         regu_axes[1].grid()
         
@@ -238,6 +240,7 @@ for train_index, test_index in CV.split(X_del,y):
             k3+=1
             
         ANN_all_Error_test2[:,k2]=ANN_Error_test2[:,0]
+        k2+=1
     
     # Convert data to torch for neural network:
     X_train = torch.Tensor(X_train)
@@ -348,4 +351,23 @@ print("Neural network outer level errors:")
 print(ANN_Error_test)
 print('\nEstimated generalization error, RMSE, on neural network model: {0}'.format(round(ANN_gen_error, 4)))
 
-print('Finished script')
+###### Udregne statistik #################
+alph=0.05
+B_LR_conf,B_LR_p=sta.setupI(B_Error_test, LR_Error_test_rlr, alph)
+B_ANN_conf,B_ANN_p=sta.setupI(B_Error_test, ANN_Error_test, alph)
+ANN_LR_conf,ANN_LR_p=sta.setupI(ANN_Error_test, LR_Error_test_rlr, alph)
+
+print("\nStatistical comparison of the models:")
+print("\nBaseline and Linear regression:")
+print("Confidence interval: {}".format(B_LR_conf))
+print("p-value: {}".format(B_LR_p))
+
+print("\nBaseline and Neural network:")
+print("Confidence interval: {}".format(B_ANN_conf))
+print("p-value: {}".format(B_ANN_p))
+
+print("\nNeural Network and Linear regression:")
+print("Confidence interval: {}".format(ANN_LR_conf))
+print("p-value: {}".format(ANN_LR_p))
+
+print('\nFinished script')
