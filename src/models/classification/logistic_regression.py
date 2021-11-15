@@ -18,13 +18,33 @@ import standardize as stan
 md = d.myData()
 N, M = md.X.shape
 
+
 X = md.X[:,0:M-1].astype(float)
 y = md.X[:,M-1].astype(float)
 
+
+mu = np.mean(X, 0)
+sigma = np.std(X, 0)
+
+X = (X - mu) / sigma
+
+opt_lambda = 10**1.37
+
 # # Fit logistic regression model
 
-model = lm.LogisticRegression()
+model = lm.LogisticRegression(penalty='l2', C=1/opt_lambda)
 model = model.fit(X,y)
+
+coefs = model.coef_
+offset = model.intercept_
+
+coefs = np.stack(coefs, axis=1)
+
+print(coefs)
+
+print (offset)
+
+
 
 # Classify presence of coronary heart disease (chd) as absent/present (0/1) and assess probabilities
 y_est = model.predict(X)
