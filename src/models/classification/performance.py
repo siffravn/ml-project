@@ -5,6 +5,10 @@ from two_L_CV import *
 import log_reg
 import ann
 import baseline
+import torch
+
+# opt_lambda = 1.11
+# opt_hidden_unit = 2
 
 # store predictions.
 yhat = []
@@ -31,13 +35,23 @@ for train_index, test_index in zip(train_indexs, test_indexs):
     
     # Log-reg ##
     # Fit classifier and classify the test points
-    y_est = log_reg.define_train_test(opt_lambda, X_train, y_train, X_test, y_test)
+    y_est = log_reg.define_train_test(10**opt_lambda, X_train, y_train, X_test, y_test)
     
     dy.append( y_est )
     
     # ANN ##
+    
+    X_tensor_train = torch.Tensor(X_train)
+    y_tensor_train = torch.Tensor(np.expand_dims(y_train, axis=1).astype(np.uint8))
+    X_tensor_test = torch.Tensor(X_test)
+
+    
     # Fit classifier and classify the test points
-    y_est = ann.define_train_test(opt_hidden_unit, M, X_train, y_train, X_test, y_test)
+    y_est = ann.define_train_test(opt_hidden_unit, 
+                                  M, 
+                                  X_tensor_train, 
+                                  y_tensor_train, 
+                                  X_tensor_test)
     
     dy.append( y_est )
     
