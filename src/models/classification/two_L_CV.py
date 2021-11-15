@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import torch
 from sklearn import model_selection
 from collections import Counter
 
@@ -32,11 +33,11 @@ K1 = 10
 K2 = 10
 
 # Define values for log_reg
-lambdas = np.logspace(-2, 2, 50).tolist()
+lambdas = np.logspace(-2, 2, 20).tolist()
 lr_val_errors = np.zeros(shape=(K1, K2, len(lambdas)))
 
 # Define values for ANN
-hidden_units = range(1,10,1)
+hidden_units = range(1,11,1)
 ann_val_errors = np.zeros(shape=(K1, K2, len(hidden_units)))
 
 # Define table
@@ -84,7 +85,12 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             # store error rate for current CV fold
             lr_val_errors[i][j][lambdas.index(l)] = log_reg.error_rate(y_test_est2, y_test2)
         
+        
         # Artificial neural net
+        X_tensor_train2 = torch.Tensor(X_train2)
+        y_tensor_train2 = torch.Tensor(np.expand_dims(y_train2, axis=1).astype(np.uint8))
+        X_tensor_test2 = torch.Tensor(X_test2)
+        
         for h in hidden_units :
             
             print('Fold i = ', i)
@@ -96,9 +102,9 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
             # Test model #   
             y_test_est2 = ann.define_train_test(h, 
                                                 M, 
-                                                X_train2, 
-                                                y_train2, 
-                                                X_test2)
+                                                X_tensor_train2, 
+                                                y_tensor_train2, 
+                                                X_tensor_test2)
             
             # Store error rate for current CV fold
             ann_val_errors[i][j][hidden_units.index(h)] = ann.error_rate(y_test_est2, y_test2)
@@ -109,8 +115,8 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     # Log-reg ##
     # Find_optimal_model
     optimal_lambda = tl_cv_util.find_optimal_model(lambdas, 
-                                                   lr_val_errors[i,:,:], 
-                                                   weight)
+                                                    lr_val_errors[i,:,:], 
+                                                    weight)
     
     # Re-train and test optimal model    
     y_test_est1 = log_reg.define_train_test(optimal_lambda,
@@ -123,23 +129,29 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
 
     
     # Save error_rate and lambda
+    # table[i,0] = np.round(np.log10(optimal_lambda),2)
     table[i,0] = np.round(np.log10(optimal_lambda),2)
     table[i,1] = test_error_rate
     
     
     
     # ANN ##
+    X_tensor_train1 = torch.Tensor(X_train1)
+    y_tensor_train1 = torch.Tensor(np.expand_dims(y_train1, axis=1).astype(np.uint8))
+    X_tensor_test1 = torch.Tensor(X_test1)
+    
+    
     # Compute model generalization error for each model s
     optimal_hidden_units = tl_cv_util.find_optimal_model(hidden_units, 
-                                                         ann_val_errors[i,:,:], 
-                                                         weight)
+                                                          ann_val_errors[i,:,:], 
+                                                          weight)
     
     # Re-train and test optimal model
     y_test_est1 = ann.define_train_test(optimal_hidden_units,
                                         M, 
-                                        X_train1, 
-                                        y_train1, 
-                                        X_test1)
+                                        X_tensor_train1, 
+                                        y_tensor_train1, 
+                                        X_tensor_test1)
     
     test_error_rate = ann.error_rate(y_test_est1, y_test1)
     
@@ -162,15 +174,20 @@ for i, (train_index1, test_index1) in enumerate(CV.split(X,y)):
     
 # Compute the estimate of the generalization error
 
+est_gen_errors = []
+
 weight = len(test_index1)/N
 
 est_gen_error = sum(weight*table[:,1])
+est_gen_errors.append(est_gen_error)
 print('Log_reg:  Estimated generalization error is', est_gen_error)
 
 est_gen_error = sum(weight*table[:,3])
+est_gen_errors.append(est_gen_error)
 print('Ann:      Estimated generalization error is', est_gen_error)
 
 est_gen_error = sum(weight*table[:,4])
+est_gen_errors.append(est_gen_error)
 print('Baseline: Estimated generalization error is', est_gen_error)
 
 
@@ -180,5 +197,5 @@ opt_lambda = counter.most_common(1)[0][0]
 print('most common: ', opt_lambda)
 
 counter = Counter(table[:,2])
-opt_hidden_unit = counter.most_common(1)[0][0]
+opt_hidden_unit = int(counter.most_common(1)[0][0])
 print('most common: ', opt_hidden_unit)

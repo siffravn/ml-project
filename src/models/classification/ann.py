@@ -31,12 +31,12 @@ def define(M, hidden_units):
     
 def train(model, X_train, y_train):
     
-    # Format y so tourch can use it
-    y_train = np.expand_dims(y_train, axis=1).astype(np.uint8)
+    # # Format y so tourch can use it
+    # y_train = np.expand_dims(y_train, axis=1).astype(np.uint8)
     
-    # Convert training set to PyTorch tensors
-    X_train = torch.Tensor(X_train)
-    y_train = torch.Tensor(y_train)
+    # # Convert training set to PyTorch tensors
+    # X_train = torch.Tensor(X_train)
+    # y_train = torch.Tensor(y_train)
        
     # Since we're training a neural network for binary classification, we use a 
     # binary cross entropy loss (see the help(train_neural_net) for more on
@@ -62,8 +62,8 @@ def train(model, X_train, y_train):
 
 def test(net, X_test):
     
-    # Convert test set to PyTorch tensors
-    X_test = torch.Tensor(X_test)
+    # # Convert test set to PyTorch tensors
+    # X_test = torch.Tensor(X_test)
     
     # Test model #
     # Determine estimated class labels for test set
